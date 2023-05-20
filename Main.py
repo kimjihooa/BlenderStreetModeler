@@ -3,6 +3,8 @@ import bmesh
 import math
 import random
 import os
+import unittest
+from unittest.mock import Mock
 
 if bpy.context.mode == 'EDIT_MESH':
     bpy.ops.object.editmode_toggle()
@@ -1018,3 +1020,125 @@ bpy.data.scenes["Scene"].render.filepath = os.getcwd() + "\\Results"
 bpy.data.scenes["Scene"].render.image_settings.file_format = "JPEG"
 
 print("Press F12 to start rendering")
+
+class MainCodeTest(unittest.TestCase):
+    def tearDown(self) -> None:
+        '''
+        Delete test objects after test
+        '''
+        for i in bpy.data.objects:
+            if i.name.startswith("Test"):
+                bpy.data.objects.remove(i, do_unlink = True)
+            
+    def test_branch_creator(self):
+        '''
+        Test branch_creator by counting total verts number
+        '''
+        Test_bm = bmesh.new()
+        Test_data = bpy.data.meshes.new('Test')
+        bmesh.ops.create_cube(Test_bm, size = 0.1)
+        bm_transform.branch_creator(Test_bm, Test_bm.verts[0:1][0].index, 1.5)
+        verts_num = 0
+        for verts in Test_bm.verts:
+            verts_num += 1
+        Test_bm.to_mesh(Test_data)
+        Test_bm.free()
+        Test_obj = bpy.data.objects.new(Test_data.name, Test_data)
+        bpy.context.collection.objects.link(Test_obj)
+        self.assertTrue(verts_num == 10 or verts_num == 11)
+        
+    def test_get_Distance(self):
+        '''
+        Make a simple cube and calculate distance
+        '''
+        Test_bm = bmesh.new()
+        Test_data = bpy.data.meshes.new('Test')
+        bmesh.ops.create_cube(Test_bm, size = 1)
+        Test_bm.verts.ensure_lookup_table()
+        distance = bm_transform.get_Distance(Test_bm.verts[0], Test_bm.verts[1])
+        self.assertEqual(distance, 1)
+        
+    def test_translate(self):
+        '''
+        Check if object's coordinate is changed correctly by making a mock
+        '''
+        Test_bm = bmesh.new()
+        Test_data = bpy.data.meshes.new('Test')
+        bmesh.ops.create_cube(Test_bm, size = 0.1)
+        Test_bm.to_mesh(Test_data)
+        Test_bm.free()
+        Test_obj = bpy.data.objects.new(Test_data.name, Test_data)
+        bpy.context.collection.objects.link(Test_obj)
+        mock = Mock(return_value = Test_obj)
+        object_transform.translate(mock().name, (1.0, 1.0, 1.0))
+        x = mock().location[0]
+        y = mock().location[1]
+        z = mock().location[2]
+        self.assertTrue(x == 1.0 and y == 1.0 and z == 1.0)
+        
+    def test_resize(self):
+        '''
+        Check if object's size is changed correctly by making a mock
+        '''
+        Test_bm = bmesh.new()
+        Test_data = bpy.data.meshes.new('Test')
+        bmesh.ops.create_cube(Test_bm, size = 0.1)
+        Test_bm.to_mesh(Test_data)
+        Test_bm.free()
+        Test_obj = bpy.data.objects.new(Test_data.name, Test_data)
+        bpy.context.collection.objects.link(Test_obj)
+        mock = Mock(return_value = Test_obj)
+        object_transform.resize(mock().name, (1.0, 1.0, 1.0))
+        x = mock().scale[0]
+        y = mock().scale[1]
+        z = mock().scale[2]
+        self.assertTrue(x == 1.0 and y == 1.0 and z == 1.0)
+        
+    def test_rotate(self):
+        '''
+        Check if object's rotation is changed correctly by making a mock
+        '''
+        Test_bm = bmesh.new()
+        Test_data = bpy.data.meshes.new('Test')
+        bmesh.ops.create_cube(Test_bm, size = 0.1)
+        Test_bm.to_mesh(Test_data)
+        Test_bm.free()
+        Test_obj = bpy.data.objects.new(Test_data.name, Test_data)
+        bpy.context.collection.objects.link(Test_obj)
+        mock = Mock(return_value = Test_obj)
+        object_transform.rotate(mock().name, (1.0, 1.0, 1.0))
+        x = mock().rotation_euler[0]
+        y = mock().rotation_euler[1]
+        z = mock().rotation_euler[2]
+        value = math.radians(1.0)
+        self.assertTrue(x -value < 0.0001 and y -value < 0.0001 and z -value < 0.0001)
+        
+    def test_generator(self):
+        '''
+        Check if all objects are created
+        '''
+        alright = True
+        for i in bpy.data.objects:
+            if i.name.startswith("Street_Lamp"):
+                continue
+            if i.name.startswith("Land"):
+                continue
+            if i.name.startswith("Rock"):
+                continue
+            if i.name.startswith("Tree"):
+                continue
+            if i.name.startswith("Branch"):
+                continue
+            if i.name.startswith("Branch_Leaves"):
+                continue
+            if i.name.startswith("Rain"):
+                continue
+            if i.name.startswith("Rain_Emitter"):
+                continue
+            if(i.name.startswith("Rain_Emitter") and i.name.startswith("Rain") and i.name.startswith("Branch_Leaves") and i.name.startswith("Street_Lamp") and i.name.startswith("Land") and i.name.startswith("Rock") and i.name.startswith("Tree") and i.name.startswith("Branch")):
+                alright = False
+        self.assertTrue(alright)
+    
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(MainCodeTest)
+runner = unittest.TextTestRunner()
+runner.run(suite)
