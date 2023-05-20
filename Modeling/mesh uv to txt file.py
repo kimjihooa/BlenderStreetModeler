@@ -1,0 +1,50 @@
+import bpy
+import bmesh
+
+mesh = bpy.context.view_layer.objects.active.data
+
+bm = bmesh.from_edit_mesh(mesh)
+verts = []
+faces = []
+
+Small_Branch_vert = open("Small branch leaf verts.txt", "w")
+for vert in bm.verts:
+    verts.append(vert.co)
+for i in verts:
+    for j in range(0, 3):
+        Small_Branch_vert.write(str(i[j]))
+        Small_Branch_vert.write('\n')
+Small_Branch_vert.close()
+
+Small_Branch_face = open("Small branch leaf faces.txt", "w")
+for f in bm.faces:
+    for v in f.verts:
+        Small_Branch_face.write(str(v.index))
+        Small_Branch_face.write('\n')
+Small_Branch_face.close()
+
+bpy.ops.object.editmode_toggle()
+
+Small_Branch_uv = open("Small branch leaf uv.txt", "w")
+ 
+mesh = bpy.context.object.data
+uv_layer = mesh.uv_layers.active.data
+
+
+for poly in mesh.polygons:
+    print("Polygon", poly.index)
+    
+    for li in poly.loop_indices:
+        vi = mesh.loops[li].vertex_index
+        uv = uv_layer[li].uv
+        print("    Loop index %i (Vertex %i) - UV %f %f" % (li, vi, uv.x, uv.y))
+        
+
+        Small_Branch_uv.write(str(uv.x) + "\n")
+        Small_Branch_uv.write(str(uv.y) + "\n")
+        
+Small_Branch_uv.close()
+
+bpy.ops.object.editmode_toggle()
+
+print("Done")
